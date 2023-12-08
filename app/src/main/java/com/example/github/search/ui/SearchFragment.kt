@@ -24,4 +24,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
     }
 
 
+
+
+
 }
