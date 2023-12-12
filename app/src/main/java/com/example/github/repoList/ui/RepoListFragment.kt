@@ -4,17 +4,19 @@ import android.content.ContentValues.TAG
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.github.R
+import com.example.github.repoDetail.ui.RepoDetailFragment
 import com.example.github.common.ui.BaseFragment
 import com.example.github.databinding.FragmentRepoListBinding
-import com.example.github.databinding.FragmentSearchBinding
+import com.example.github.repoList.RepoViewModel
 import com.example.github.repoList.adapter.RepoListAdapter
 import com.example.github.repoList.api.Repo
 import com.example.github.repoList.repository.repoApi
@@ -25,7 +27,25 @@ import retrofit2.Response
 
 class RepoListFragment() : BaseFragment<FragmentRepoListBinding>() {
 
-    private val repoListAdapter: RepoListAdapter by lazy { RepoListAdapter() }
+//    private val repoListAdapter: RepoListAdapter by lazy { RepoListAdapter() }
+
+    private val viewModel: RepoViewModel by viewModels()
+
+    private val repoListAdapter: RepoListAdapter by lazy {
+        RepoListAdapter().apply {
+            setOnRepoHolderClickListener { id, url ->
+                // id와 url을 사용하여 상세조회 화면으로 이동하는 로직 구현
+                val fragment = RepoDetailFragment().apply {
+                    arguments = Bundle().apply {
+                        putLong("id", id ?: 0L)
+                        putString("url", url)
+                    }
+                }
+                listener?.changeFragment(fragment)
+            }
+        }
+    }
+
     private var currentPage = 1
 
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentRepoListBinding {
@@ -33,6 +53,11 @@ class RepoListFragment() : BaseFragment<FragmentRepoListBinding>() {
     }
 
     override fun initFragment() {
+        viewModel.currentPage.observe(viewLifecycleOwner, { page ->
+            currentPage = page
+            binding.pageNum.text = currentPage.toString()
+        })
+
         initRepoListRecyclerView()
         callRepoList()
         initBtn()
@@ -53,6 +78,8 @@ class RepoListFragment() : BaseFragment<FragmentRepoListBinding>() {
                     callRepoList()
                     Toast.makeText(context, "더 이상 Repository 목록이 없습니다.", Toast.LENGTH_SHORT).show()
                 }
+                // ViewModel에 currentPage 저장
+                viewModel.currentPage.value = currentPage
                 binding.pageNum.text = currentPage.toString()
             }
         }
@@ -62,6 +89,8 @@ class RepoListFragment() : BaseFragment<FragmentRepoListBinding>() {
             if (currentPage > 1) {
                 currentPage--
                 callRepoList()
+                // ViewModel에 currentPage 저장
+                viewModel.currentPage.value = currentPage
                 binding.pageNum.text = currentPage.toString()
             }
         }
@@ -95,7 +124,7 @@ class RepoListFragment() : BaseFragment<FragmentRepoListBinding>() {
                     }
 
                     override fun onFailure(call: Call<List<Repo>>, t: Throwable) {
-                        Log.d(TAG, "callPersonList onFailure", t)
+                        Log.d(TAG, "callRepoList onFailure", t)
                     }
                 }
                 )

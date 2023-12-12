@@ -4,4 +4,5 @@ import com.example.github.repoList.ui.RepoListFragment
 
 interface FragmentListener {
     fun changeFragment(fragment:BaseFragment<*>)
+    fun popFragment()
 }

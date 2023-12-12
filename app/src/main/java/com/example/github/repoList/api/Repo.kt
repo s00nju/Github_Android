@@ -8,5 +8,6 @@ data class Repo(
     @SerializedName("full_name") val fullName: String,
     @SerializedName("description") val description: String?,
     @SerializedName("url") val url: String,
+    @SerializedName("html_url") val html_url: String,
     @SerializedName("private") val isPrivate: Boolean
 )
